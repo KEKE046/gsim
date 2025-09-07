@@ -1,0 +1,32 @@
+[workspace]
+authors = [
+    "Lu Chen <chenlu22z@ict.ac.cn>",
+    "KEKE046 <zhoukexing@pku.edu.cn>"
+]
+channels = [
+    "KEKE046", # provide clang friendly verilator
+    "conda-forge"
+]
+name = "gsim"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+init = "make init"
+build-gsim = "make build-gsim"
+
+[dependencies]
+clang = ">=21.1.0,<22"
+clangxx = ">=21.1.0,<22"
+lld = ">=21.1.0,<22"
+flex = ">=2.6.4,<3"
+bison = ">=3.8.2,<4"
+gmp = ">=6.3.0,<7"
+verilator = ">=5.36,<6"
+ccache = ">=4.11.3,<5"
+llvm-tools = ">=21.1.0,<22"
+
+[activation.env]
+CXXFLAGS = "-I$CONDA_PREFIX/include"
+LDFLAGS = "-L$CONDA_PREFIX/lib"
+MAKEFLAGS = "-j$(nproc)"

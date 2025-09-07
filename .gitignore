@@ -16,3 +16,7 @@ doc/html
 *.data*
 *.txt
 emu/obj*
+
+# pixi environments
+.pixi
+*.egg-info

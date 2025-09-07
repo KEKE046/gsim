@@ -2,11 +2,30 @@
 
 GSIM accepts chirrtl, and compiles it to C++
 
+## Quick Start using PIXI
+
++ Install dependencies by pixi.sh
+
+    ```bash
+    # Install pixi.sh
+    curl -fsSL https://pixi.sh/install.sh | sh
+    # Init repository
+    pixi install
+    pixi run init
+    pixi shell
+    ```
+
++ Try GSIM
+
+    ```bash
+    make run dutName=ysyx3
+    ```
+
 ## Prerequisites
 
 + Install [GMP](https://gmplib.org/), [clang 19(+)](https://clang.llvm.org/).
 
-## Quike Start
+## Quick Start
 
 + GSIM provides 4 RISC-V cores ready for simulation: [ysyx3](https://ysyx.oscc.cc/), [Rocket](https://github.com/chipsalliance/rocket-chip), [BOOM](https://github.com/riscv-boom/riscv-boom), [XiangShan](https://github.com/OpenXiangShan/XiangShan).
 
