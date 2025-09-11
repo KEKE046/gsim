@@ -5,6 +5,16 @@
 #ifndef GRAPH_H
 #define GRAPH_H
 
+#include <cstdio>
+#include <string>
+#include <set>
+#include <map>
+#include <cstdint>
+#include "Node.h"
+
+class Node;
+class SuperNode;
+
 class graph {
   FILE *srcFp;
   int srcFileIdx;

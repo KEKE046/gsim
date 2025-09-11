@@ -1,6 +1,13 @@
 #ifndef VALINFO_H
 #define VALINFO_H
 
+#include <string>
+#include "opFuncs.h"
+#include <vector>
+#include "utils.h"
+#include <cstdint>
+#include <format>
+
 std::string legalCppCons(std::string str);
 int upperPower2(int x);
 

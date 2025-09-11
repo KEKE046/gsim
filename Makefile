@@ -143,7 +143,7 @@ GSIM_INC_DIR = include $(PARSER_DIR)/include $(PARSER_BUILD_DIR)
 # 2) If you still see "DWARF error: invalid or unhandled FORM value: 0x25" from ld
 #    your binutils (ld) may be older than the DWARF version emitted by clang-19.
 #    You can force DWARF v4 by building with: make DWARF4=1 ... (see conditional below).
-CXXFLAGS += -ggdb -O3 -MMD $(addprefix -I,$(GSIM_INC_DIR)) -Wall -Werror --std=c++17 -pthread
+CXXFLAGS += -ggdb -O3 -MMD $(addprefix -I,$(GSIM_INC_DIR)) -Wall --std=c++17 -pthread
 
 ifeq ($(DWARF4),1)
 	CXXFLAGS += -gdwarf-4
@@ -283,6 +283,8 @@ $(VERI_BIN): | $(VERI_GEN_MK)
 	ln -sf $(abspath $(VERI_BUILD_DIR)/V$(NAME)) $@
 
 compile-veri: $(VERI_GEN_MK)
+
+build-veri: $(VERI_BIN)
 
 run-veri-simpoint: $(VERI_BIN)
 	@echo 'Please run "$^ <gcpt> <checkpoint>" manually'

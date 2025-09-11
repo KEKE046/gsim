@@ -6,6 +6,9 @@
 #ifndef PNODE_H
 #define PNODE_H
 
+#include <string>
+#include <vector>
+
 /**
  * @class PList
  * @brief A class representing a list of PNodes.

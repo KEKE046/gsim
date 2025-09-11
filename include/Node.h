@@ -6,6 +6,13 @@
 #define NODE_H
 
 #include "debug.h"
+#include "utils.h"
+#include <algorithm>
+#include <cstdint>
+#include <vector>
+#include <string>
+#include <set>
+
 std::string format(const char *fmt, ...);
 
 class NodeComponent;

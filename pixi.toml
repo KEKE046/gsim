@@ -25,6 +25,7 @@ gmp = ">=6.3.0,<7"
 verilator = ">=5.36,<6"
 ccache = ">=4.11.3,<5"
 llvm-tools = ">=21.1.0,<22"
+circt = ">=1.122.0,<2"
 
 [activation.env]
 CXXFLAGS = "-I$CONDA_PREFIX/include"

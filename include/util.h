@@ -1,6 +1,9 @@
 #ifndef UTIL_H
 #define UTIL_H
 
+#include "utils.h"
+#include <cstdint>
+#include "debug.h"
 #include <sys/time.h>
 #include <string>
 

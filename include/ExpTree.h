@@ -4,80 +4,18 @@
 #ifndef EXPTREE_H
 #define EXPTREE_H
 
+#include <cstdint>
+#include <string>
+#include <vector>
+#include <map>
+#include <set>
+#include <cstdarg>
+#include "utils.h"
+#include "debug.h"
+
 class Node;
 class valInfo;
 class NodeComponent;
-
-enum OPType {
-  OP_EMPTY,
-  OP_MUX,
-/* 2expr */
-  OP_ADD,
-  OP_SUB,
-  OP_MUL,
-  OP_DIV,
-  OP_REM,
-  OP_LT,
-  OP_LEQ,
-  OP_GT,
-  OP_GEQ,
-  OP_EQ,
-  OP_NEQ,
-  OP_DSHL,
-  OP_DSHR,
-  OP_AND,
-  OP_OR,
-  OP_XOR,
-  OP_CAT,
-/* 1expr */
-  OP_ASUINT,
-  OP_ASSINT,
-  OP_ASCLOCK,
-  OP_ASASYNCRESET,
-  OP_CVT,
-  OP_NEG,
-  OP_NOT,
-  OP_ANDR,
-  OP_ORR,
-  OP_XORR,
-/* 1expr1int */
-  OP_PAD,
-  OP_SHL,
-  OP_SHR,
-  OP_HEAD,
-  OP_TAIL,
-/* 1expr2int */
-  OP_BITS,
-  OP_BITS_NOSHIFT, // used for bit operations
-/* index */
-  OP_INDEX_INT,
-  OP_INDEX,
-/* when, may be replaced by mux */
-  OP_WHEN,
-/* special */
-  OP_PRINTF,
-  OP_ASSERT,
-  OP_EXIT,
-/* leaf non-node enode */
-  OP_INT,
-/* for arrays */
-  OP_GROUP,
-/* special nodes for memory */
-  OP_READ_MEM,
-  OP_WRITE_MEM,
-  OP_INFER_MEM,
-/* special nodes for invalid node */
-  OP_INVALID,
-  OP_RESET,
-/* width processing */
-  OP_SEXT,
-/* extmodule / dipc */
-  OP_EXT_FUNC,
-/* aggregate when node */
-  OP_STMT_SEQ,
-  OP_STMT_WHEN,
-  OP_STMT_NODE
-};
 
 class ENode {
 private:

@@ -1,9 +1,14 @@
 #ifndef STMTTREE_H
 #define STMTTREE_H
 /* stmt trees indicate how to generate statements in a supernode */
-#include "common.h"
+#include "utils.h"
+#include "debug.h"
+#include <vector>
+#include <set>
+
 class ENode;
 class ExpTree;
+class InstInfo;
 
 class StmtNode {
 public:

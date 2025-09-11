@@ -11,6 +11,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/binutils_impl_linux-64-2.44-h4bf12b8_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/bison-3.8.2-h59595ed_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ccache-4.11.3-h80c52d3_0.conda
+      - conda: https://conda.anaconda.org/KEKE046/linux-64/circt-1.122.0-hb0f4dca_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-21-21.1.0-default_hddf928d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-21.1.0-default_hfa515fb_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/clangxx-21.1.0-default_h804c401_0.conda
@@ -19,6 +20,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/kernel-headers_linux-64-4.18.0-he073ed8_8.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/ld_impl_linux-64-2.44-h1423503_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libclang-cpp21.1-21.1.0-default_hddf928d_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/libedit-3.1.20250104-pl5321h7949ede_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-15.1.0-h767d61c_5.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/libgcc-devel_linux-64-15.1.0-h4c094af_105.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-ng-15.1.0-h69a702a_5.conda
@@ -39,6 +41,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/llvm-tools-21-21.1.0-h3b15d91_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/llvm-tools-21.1.0-hb700be7_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/m4-1.4.20-hb9d3cd8_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/sysroot_linux-64-2.28-h4ee821c_8.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/tzdata-2025b-h78e105d_0.conda
       - conda: https://conda.anaconda.org/KEKE046/linux-64/verilator-5.36-hb0f4dca_3.conda
@@ -98,6 +101,14 @@ packages:
   license_family: GPL
   size: 708908
   timestamp: 1746271484780
+- conda: https://conda.anaconda.org/KEKE046/linux-64/circt-1.122.0-hb0f4dca_0.conda
+  sha256: 0a771042a809fddcd8d932701fa253602b9046b0cec7be4c1d8a2f46e9fae4ab
+  md5: e2a7b9ae518d0d1067dec32229d61fcf
+  depends:
+  - libedit >=3.1.20250104,<3.2.0a0
+  - zstd >=1.5.7,<1.6.0a0
+  size: 932337382
+  timestamp: 1750669686588
 - conda: https://conda.anaconda.org/conda-forge/linux-64/clang-21.1.0-default_hfa515fb_0.conda
   sha256: c60c131531e5532932033e01563c5bc52ff4faa93333a2123521e9ba88e805e1
   md5: ab524073397feffc8f5d505343636e95
@@ -185,6 +196,18 @@ packages:
   license_family: Apache
   size: 21132086
   timestamp: 1756628617438
+- conda: https://conda.anaconda.org/conda-forge/linux-64/libedit-3.1.20250104-pl5321h7949ede_0.conda
+  sha256: d789471216e7aba3c184cd054ed61ce3f6dac6f87a50ec69291b9297f8c18724
+  md5: c277e0a4d549b03ac1e9d6cbbe3d017b
+  depends:
+  - ncurses
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=13
+  - ncurses >=6.5,<7.0a0
+  license: BSD-2-Clause
+  license_family: BSD
+  size: 134676
+  timestamp: 1738479519902
 - conda: https://conda.anaconda.org/conda-forge/linux-64/libgcc-15.1.0-h767d61c_5.conda
   sha256: 0caed73aac3966bfbf5710e06c728a24c6c138605121a3dacb2e03440e8baa6a
   md5: 264fbfba7fb20acf3b29cde153e345ce
@@ -416,6 +439,15 @@ packages:
   license_family: GPL
   size: 286245
   timestamp: 1747307567001
+- conda: https://conda.anaconda.org/conda-forge/linux-64/ncurses-6.5-h2d0b736_3.conda
+  sha256: 3fde293232fa3fca98635e1167de6b7c7fda83caf24b9d6c91ec9eefb4f4d586
+  md5: 47e340acb35de30501a76c7c799c41d7
+  depends:
+  - __glibc >=2.17,<3.0.a0
+  - libgcc >=13
+  license: X11 AND BSD-3-Clause
+  size: 891641
+  timestamp: 1738195959188
 - conda: https://conda.anaconda.org/conda-forge/noarch/sysroot_linux-64-2.28-h4ee821c_8.conda
   sha256: 0053c17ffbd9f8af1a7f864995d70121c292e317804120be4667f37c92805426
   md5: 1bad93f0aa428d618875ef3a588a889e

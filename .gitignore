@@ -16,6 +16,7 @@ doc/html
 *.data*
 *.txt
 emu/obj*
+ubench
 
 # pixi environments
 .pixi
