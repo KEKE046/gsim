@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <fstream>
 
 PNode* parseFIR(char *strbuf);
 void preorder_traversal(PNode* root);
@@ -187,7 +188,17 @@ int main(int argc, char** argv) {
 
   FUNC_TIMER(g->instsGenerator());
 
-  FUNC_WRAPPER(g->cppEmitter(), "Final");
+  // void exportGraph(graph* g, std::ostream & out);
+  // std::ofstream ofs{globalConfig.OutputDir + "/" + g->name + ".sexp"};
+  // exportGraph(g, ofs);
+  // ofs.close();
+
+  void emitSchIR(graph * graph, std::ostream & out);
+  std::ofstream out{globalConfig.OutputDir + "/" + g->name + ".sch.sexp"};
+  emitSchIR(g, out);
+  out.close();
+
+  // FUNC_WRAPPER(g->cppEmitter(), "Final");
 
   TIMER_END(total);
 

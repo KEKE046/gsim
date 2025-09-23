@@ -390,6 +390,7 @@ void graph::activateNext(Node* node, std::set<int>& nextNodeId, std::string oldN
     }
   }
   if (inStep) {
+    assert(false);
     if (node->isReset() && node->type == NODE_REG_SRC) emitBodyLock(indent, "%s = %s;\n", RESET_NAME(node).c_str(), newName(node).c_str());
     emitBodyLock(indent, "%s = %s;\n", node->name.c_str(), newName(node).c_str());
   }
@@ -403,7 +404,9 @@ void graph::activateNext(Node* node, std::set<int>& nextNodeId, std::string oldN
       else emitBodyLock(indent, "%s |= 0x%lx; // %s\n", flagName.c_str(), ACTIVE_MASK(curMask), ACTIVE_COMMENT(curMask).c_str());
     }
     for (auto iter : bitMapInfo) {
-      auto str = opt ? updateActiveStr(iter.first, ACTIVE_MASK(iter.second), condName, ACTIVE_UNIQUE(iter.second)) : updateActiveStr(iter.first, ACTIVE_MASK(iter.second));
+      auto str = opt 
+        ? updateActiveStr(iter.first, ACTIVE_MASK(iter.second), condName, ACTIVE_UNIQUE(iter.second))
+        : updateActiveStr(iter.first, ACTIVE_MASK(iter.second));
       emitBodyLock(indent, "%s // %s\n", str.c_str(), ACTIVE_COMMENT(iter.second).c_str());
     }
   #ifdef PERF

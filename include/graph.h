@@ -11,6 +11,7 @@
 #include <map>
 #include <cstdint>
 #include "Node.h"
+#include "lexpr.h"
 
 class Node;
 class SuperNode;
