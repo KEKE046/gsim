@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cstddef>
 #include <unordered_map>
 #include "Node.h"
@@ -56,6 +57,32 @@ static std::string_view stringifyNodeType(NodeType ty) {
 // }
 
 extern int maxConcatNum;
+
+// struct StateInfo {
+//   std::set<int> combNexts;
+//   std::set<int> seqNexts;
+// };
+
+// static StateInfo getStateInfo(Node * node) {
+//   StateInfo info;
+//   for(Node * next: node->next) {
+//     if(next->super->cppId < 0) continue;
+//     if(next->super->cppId > node->super->cppId) {
+//       info.combNexts.insert(next->super->cppId);
+//     }
+//   }
+//   if(node->type == NODE_REG_DST) {
+//     auto target = node->getSrc();
+//     if(target->super->cppId != -1) {
+//       info.seqNexts.insert(target->super->cppId);
+//     }
+//   }
+//   if(node->type == NODE_MEMORY) {
+//     for(Node * port: node->member) {
+      
+//     }
+//   }
+// }
 
 struct SchIREmitter {
   Emitter e;
@@ -123,8 +150,81 @@ struct SchIREmitter {
       e << dim;
     }
     e << end;
+    // std::set<int> cReads, cWrites, sWrites;
+    std::set<int> cReads, sReads, writes;
+    if(node->type == NODE_MEMORY) {
+      std::set<int> reads;
+      for(auto member: node->member) {
+        if(member->type == NODE_READER) {
+          reads.insert(member->super->cppId);
+        }
+        else if(member->type == NODE_WRITER) {
+          writes.insert(member->super->cppId);
+        }
+        else if(member->type == NODE_READWRITER) {
+          reads.insert(member->super->cppId);
+          writes.insert(member->super->cppId);
+        }
+      }
+      if(reads.size() > 0 && writes.size() > 0) {
+        auto max_read = *std::max_element(reads.begin(), reads.end());
+        auto min_write = *std::min_element(writes.begin(), writes.end());
+        assert(max_read <= min_write);
+      }
+      sReads.insert(reads.begin(), reads.end());
+    } else {
+      writes.insert(node->super->cppId);
+      for(auto * next: node->next) {
+        if(next->super->cppId < 0) continue;
+        if(next->super->cppId > node->super->cppId) {
+          cReads.insert(next->super->cppId);
+        } else {
+          sReads.insert(next->super->cppId);
+        }
+      }
+      if(node->type == NODE_REG_DST) {
+        auto target = node->getSrc();
+        if(target->super->cppId != -1) {
+          sReads.insert(target->super->cppId);
+        }
+      }
+      assert(node->type != NODE_READWRITER);
+      assert(node->type != NODE_WRITER);
+    }
     e << tup;
-    emitActIds(node->nextActiveId);
+    for(auto write: writes) e << write;
+    e << end;
+    e << tup;
+    for(auto read: cReads) e << read;
+    e << end;
+    e << tup;
+    for(auto read: sReads) e << read;
+    e << end;
+    e << end << pretty;
+  }
+  void emitSave(Node * node) {
+    int node_id;
+    if(node->type == NODE_WRITER) {
+      node_id = node2idx.at(node->parent);
+    } else {
+      node_id = node2idx.at(node);
+    }
+    e << inlined << named("save") << node_id << node->name << node->width << end << pretty;
+  }
+  void emitAct(Node * node) {
+    int node_id;
+    if(node->type == NODE_WRITER) {
+      node_id = node2idx.at(node->parent);
+    } else {
+      node_id = node2idx.at(node);
+    }
+    e << inlined << named("act") << node_id << node->name;
+    bool isAlwaysActivate = node->isArray() || node->type == NODE_WRITER;
+    e << isAlwaysActivate;
+    e << tup;
+    for(auto act: node->nextActiveId) {
+      e << act;
+    }
     e << end;
     e << end << pretty;
   }
@@ -132,31 +232,23 @@ struct SchIREmitter {
     e << list;
     e << kv("id", super->cppId);
     e << kv("always", super->superType == SUPER_EXTMOD);
-    e << inlined
-      << named("next");
+    e << inlined << named("next");
     for(auto next: super->depNext) {
       if(next->cppId < 0) continue;
       e << next->cppId;
     }
-    e << end 
-      << pretty;
-    e << inlined
-      << named("owned");
-    for(auto node: super->member) {
-      if(node2idx.count(node)) {
-        e << node2idx[node];
-      }
-    }
-    e << end
-      << pretty;
+    e << end << pretty;
+    // e << inlined << named("writes");
+    // for(auto node: super->member) {
+    //   if(node2idx.count(node)) {
+    //     e << node2idx.at(node);
+    //   }
+    // }
+    // e << end << pretty;
     e << named("insts");
     if(super->superType == SUPER_EXTMOD) {
       for(size_t i = 1; i < super->member.size(); i++) {
-        auto node = super->member[i];
-        e << inlined << named("save");
-        e << node->name;
-        e << node->width;
-        e << end << pretty;
+        emitSave(super->member[i]);
       }
     }
     for(auto * node: super->member) {
@@ -172,41 +264,24 @@ struct SchIREmitter {
         case SUPER_INFO_STR:
           e << kv("raw", inst.inst);
           break;
-        case SUPER_INFO_ASSIGN_BEG:
-          if (inst.node->isLocal() || inst.node->isArray() || inst.node->type == NODE_WRITER) break;
-          e << inlined << named("save");
-          e << inst.node->name;
-          e << inst.node->width;
-          e << end << pretty;
+        case SUPER_INFO_ASSIGN_BEG: {
+          if(inst.node->isLocal()) break;
+          emitSave(inst.node);
           break;
-        case SUPER_INFO_ASSIGN_END:
-          if (inst.node->isLocal() || !inst.node->needActivate()) break;
-          if (inst.node->isArray() || inst.node->type == NODE_WRITER) {
-            e << inlined << named("act") << list << end;
-            e << tup;
-            emitActIds(inst.node->nextActiveId);
-            e << end << end << pretty;
-          } else {
-            e << inlined << named("act") << list << inst.node->name << end;
-            e << tup;
-            emitActIds(inst.node->nextActiveId);
-            e << end << end << pretty;
-          }
+        }
+        case SUPER_INFO_ASSIGN_END: {
+          if (inst.node->isLocal()) break;
+          emitAct(inst.node);
           break;
+        }
       }
     }
     if(super->superType == SUPER_EXTMOD) {
       for(size_t i = 1; i < super->member.size(); i++) {
-        auto node = super->member[i];
-        assert(node->type != NODE_EXT_IN);
-        e << inlined << named("act") << list << node->name << end;
-        e << tup;
-        emitActIds(node->nextActiveId);
-        e << end << end << pretty;
+        emitAct(super->member[i]);
       }
     }
-    e << end
-      << end;
+    e << end << end;
   }
   void emitReset(SuperNode * super, size_t id) {
     e << list;
