@@ -200,6 +200,9 @@ struct SchIREmitter {
     e << tup;
     for(auto read: sReads) e << read;
     e << end;
+    e << tup;
+    for(auto act: node->nextActiveId) e << act;
+    e << end;
     e << end << pretty;
   }
   void emitSave(Node * node) {
@@ -209,7 +212,8 @@ struct SchIREmitter {
     } else {
       node_id = node2idx.at(node);
     }
-    e << inlined << named("save") << node_id << node->name << node->width << end << pretty;
+    bool isAlwaysActivate = node->isArray() || node->type == NODE_WRITER;
+    e << inlined << named("save") << node_id << node->name << !isAlwaysActivate << node->width << end << pretty;
   }
   void emitAct(Node * node) {
     int node_id;
@@ -220,7 +224,7 @@ struct SchIREmitter {
     }
     e << inlined << named("act") << node_id << node->name;
     bool isAlwaysActivate = node->isArray() || node->type == NODE_WRITER;
-    e << isAlwaysActivate;
+    e << !isAlwaysActivate;
     e << tup;
     for(auto act: node->nextActiveId) {
       e << act;
@@ -238,13 +242,6 @@ struct SchIREmitter {
       e << next->cppId;
     }
     e << end << pretty;
-    // e << inlined << named("writes");
-    // for(auto node: super->member) {
-    //   if(node2idx.count(node)) {
-    //     e << node2idx.at(node);
-    //   }
-    // }
-    // e << end << pretty;
     e << named("insts");
     if(super->superType == SUPER_EXTMOD) {
       for(size_t i = 1; i < super->member.size(); i++) {
