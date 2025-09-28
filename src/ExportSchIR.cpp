@@ -83,13 +83,19 @@ extern int maxConcatNum;
 //     }
 //   }
 // }
+#define RESET_NAME(node) (node->name + "$RESET")
+
 
 struct SchIREmitter {
   Emitter e;
   SchIREmitter(std::ostream & out): e(out) {}
   std::vector<SuperNode*> allSupers;
   NodeMap node2idx;
-  std::vector<Node*> allNodes;
+  struct NodeWrapper {
+    Node * node;
+    bool isReset = false;
+  };
+  std::vector<NodeWrapper> allNodes;
   void addNode(Node * node) {
     if (node->type == NODE_SPECIAL || node->type == NODE_REG_RESET || (node->status != VALID_NODE)) return;
     if (node->type == NODE_REG_DST && !node->regSplit) return;
@@ -97,7 +103,10 @@ struct SchIREmitter {
     if (node->isLocal()) return;
     if (node2idx.count(node)) return;
     node2idx[node] = allNodes.size();
-    allNodes.push_back(node);
+    allNodes.push_back({node});
+    if(node->isReset() && node->type == NODE_REG_SRC) {
+      allNodes.push_back({node, true});
+    }
   }
   std::set<int> alwaysActive;
   void prepare(graph * graph) {
@@ -128,7 +137,7 @@ struct SchIREmitter {
         }
       }
     }
-    for (auto* mem : graph->memory) addNode(mem);
+    for (auto * mem : graph->memory) addNode(mem);
   }
   template<typename T>
   void emitActIds(const T & ids) {
@@ -137,11 +146,14 @@ struct SchIREmitter {
       e << id;
     }
   }
-  void emitNode(Node * node) {
-    e << inlined << tup 
-      << kw(stringifyNodeType(node->type))
-      << node->name
-      << node->width;
+  void emitNode(Node * node, bool isReset) {
+    e << inlined << tup;
+    if(isReset) e << kw("reset");
+    else e<< kw(stringifyNodeType(node->type));
+    if(isReset) e << RESET_NAME(node);
+    else e << node->name;
+      // << node->name;
+    e  << node->width;
     e << tup;
     if(node->type == NODE_MEMORY) {
       e << node->depth;
@@ -201,7 +213,10 @@ struct SchIREmitter {
     for(auto read: sReads) e << read;
     e << end;
     e << tup;
-    for(auto act: node->nextActiveId) e << act;
+    for(auto act: node->nextActiveId) {
+      if(act < 0) continue;
+      e << act;
+    }
     e << end;
     e << end << pretty;
   }
@@ -227,6 +242,7 @@ struct SchIREmitter {
     e << !isAlwaysActivate;
     e << tup;
     for(auto act: node->nextActiveId) {
+      if(act < 0) continue;
       e << act;
     }
     e << end;
@@ -281,9 +297,7 @@ struct SchIREmitter {
     e << end << end;
   }
   void emitReset(SuperNode * super, size_t id) {
-    e << list;
-    e << kv("id", id);
-#define RESET_NAME(node) (node->name + "$RESET")
+    e << list << kv("id", id);
     std::string resetName = super->resetNode->type == NODE_REG_SRC 
       ? RESET_NAME(super->resetNode).c_str()
       : super->resetNode->name.c_str();
@@ -299,14 +313,11 @@ struct SchIREmitter {
         }
       }
     }
-    e << inlined
-      << named("acts");
+    e << inlined << named("acts");
     for(auto next: nexts) {
       e << next;
     }
-    e << end
-      << pretty;
-    e << named("insts");
+    e << end << pretty << named("insts");
     for(auto inst: super->insts) {
       switch(inst.infoType) {
         case SUPER_INFO_IF:
@@ -320,8 +331,10 @@ struct SchIREmitter {
           break;
       }
     }
-    e << end;
-    e << end;
+    e << end << end;
+  }
+  void emitResetNode(Node * node) {
+    assert(node->isReset() && node->width <= BASIC_WIDTH && !node->isArray());
   }
   void exportSchIR(graph * graph) {
     prepare(graph);
@@ -329,8 +342,8 @@ struct SchIREmitter {
     e << kv("name", graph->name);
     e << kv("max-concat", maxConcatNum);
     e << named("states");
-    for(auto * node: allNodes) {
-      emitNode(node);
+    for(auto [node, isReset]: allNodes) {
+      emitNode(node, isReset);
     }
     e << end;
     e << named("logics");

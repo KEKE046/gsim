@@ -391,7 +391,8 @@ void graph::activateNext(Node* node, std::set<int>& nextNodeId, std::string oldN
   }
   if (inStep) {
     assert(false);
-    if (node->isReset() && node->type == NODE_REG_SRC) emitBodyLock(indent, "%s = %s;\n", RESET_NAME(node).c_str(), newName(node).c_str());
+    if (node->isReset() && node->type == NODE_REG_SRC)
+      emitBodyLock(indent, "%s = %s;\n", RESET_NAME(node).c_str(), newName(node).c_str());
     emitBodyLock(indent, "%s = %s;\n", node->name.c_str(), newName(node).c_str());
   }
   if (node->isAsyncReset()) {
