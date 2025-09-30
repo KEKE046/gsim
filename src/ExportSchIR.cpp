@@ -200,8 +200,13 @@ struct SchIREmitter {
           sReads.insert(target->super->cppId);
         }
       }
-      assert(node->type != NODE_READWRITER);
-      assert(node->type != NODE_WRITER);
+      if(node->type == NODE_READWRITER) {
+        std::cerr << "readwriter as state: " << node->name << std::endl;
+      } else if(node->type == NODE_WRITER) {
+        std::cerr << "writer as state: " << node->name << std::endl;
+      }
+      // assert(node->type != NODE_READWRITER);
+      // assert(node->type != NODE_WRITER);
     }
     e << tup;
     for(auto write: writes) e << write;
@@ -220,7 +225,7 @@ struct SchIREmitter {
     e << end;
     e << end << pretty;
   }
-  void emitSave(Node * node) {
+  int emitSave(Node * node) {
     int node_id;
     if(node->type == NODE_WRITER) {
       node_id = node2idx.at(node->parent);
@@ -229,6 +234,7 @@ struct SchIREmitter {
     }
     bool isAlwaysActivate = node->isArray() || node->type == NODE_WRITER;
     e << inlined << named("save") << node_id << node->name << !isAlwaysActivate << node->width << end << pretty;
+    return node_id;
   }
   void emitAct(Node * node) {
     int node_id;
@@ -259,9 +265,10 @@ struct SchIREmitter {
     }
     e << end << pretty;
     e << named("insts");
+    std::set<int> owned;
     if(super->superType == SUPER_EXTMOD) {
       for(size_t i = 1; i < super->member.size(); i++) {
-        emitSave(super->member[i]);
+        owned.insert(emitSave(super->member[i]));
       }
     }
     for(auto * node: super->member) {
@@ -279,7 +286,7 @@ struct SchIREmitter {
           break;
         case SUPER_INFO_ASSIGN_BEG: {
           if(inst.node->isLocal()) break;
-          emitSave(inst.node);
+          owned.insert(emitSave(inst.node));
           break;
         }
         case SUPER_INFO_ASSIGN_END: {
@@ -294,7 +301,13 @@ struct SchIREmitter {
         emitAct(super->member[i]);
       }
     }
-    e << end << end;
+    e << end;
+    e << inlined << named("own");
+    for(auto owned: owned) {
+      e << owned;
+    }
+    e << end << pretty;
+    e << end;
   }
   void emitReset(SuperNode * super, size_t id) {
     e << list << kv("id", id);
