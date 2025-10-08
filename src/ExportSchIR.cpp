@@ -190,8 +190,6 @@ struct SchIREmitter {
         if(next->super->cppId < 0) continue;
         if(next->super->cppId > node->super->cppId) {
           cReads.insert(next->super->cppId);
-        } else {
-          sReads.insert(next->super->cppId);
         }
       }
       if(node->type == NODE_REG_DST) {
@@ -208,15 +206,33 @@ struct SchIREmitter {
       // assert(node->type != NODE_READWRITER);
       // assert(node->type != NODE_WRITER);
     }
+    // e << tup;
+    // for(auto write: writes) e << write;
+    // e << end;
+    // e << tup;
+    // for(auto read: cReads) e << read;
+    // e << end;
+    // e << tup;
+    // for(auto read: sReads) e << read;
+    // e << end;
+    assert(!(sReads.size() > 0 && cReads.size() > 0));
+    e << (sReads.size() > 0); // is_seq
     e << tup;
-    for(auto write: writes) e << write;
+    if(sReads.size() > 0) {
+      for(auto read: sReads) e << read;
+    } else {
+      for(auto read: cReads) e << read;
+    }
     e << end;
     e << tup;
-    for(auto read: cReads) e << read;
+    for(auto write: writes) {
+      if(write < 0) continue;
+      e << write;
+    }
     e << end;
-    e << tup;
-    for(auto read: sReads) e << read;
-    e << end;
+    if(sReads.size() > 0 && writes.size() > 1) {
+      std::cerr << "seq read with multiple writes: " << node->name << std::endl;
+    }
     e << tup;
     for(auto act: node->nextActiveId) {
       if(act < 0) continue;
