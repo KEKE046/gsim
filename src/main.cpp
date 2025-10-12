@@ -193,10 +193,10 @@ int main(int argc, char** argv) {
   emitSchIRv2(g, outv2);
   outv2.close();
 
-  void emitSchIR(graph * graph, std::ostream & out);
-  std::ofstream out{globalConfig.OutputDir + ".v1"};
-  emitSchIR(g, out);
-  out.close();
+  // void emitSchIR(graph * graph, std::ostream & out);
+  // std::ofstream out{globalConfig.OutputDir + ".v1"};
+  // emitSchIR(g, out);
+  // out.close();
 
   // FUNC_WRAPPER(g->cppEmitter(), "Final");
 

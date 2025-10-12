@@ -281,6 +281,8 @@ struct SchIREmitterV2 {
     for(auto super: graph->sortedSuper) {
       if(super->superType == SUPER_EXTMOD) {
         e << computeExtMod(super);
+        // compute ext mod will insert a inst inside
+        super->insts.pop_back();
       }
     }
     e << end; // ext-fns
