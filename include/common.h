@@ -30,6 +30,7 @@ class ExpTree;
 class SuperNode;
 class valInfo;
 class clockVal;
+class OpType;
 
 #include "opFuncs.h"
 #include "debug.h"

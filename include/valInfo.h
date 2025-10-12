@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <format>
 
+std::string format(const char *fmt, ...);
 std::string legalCppCons(std::string str);
 int upperPower2(int x);
 

@@ -69,7 +69,7 @@ static char* parseCommandLine(int argc, char** argv) {
   const struct option Table[] = {
       {"help", no_argument, nullptr, 'h'},
       {"dump", no_argument, nullptr, 'd'},
-      {"dir", required_argument, nullptr, 0},
+      {"output", required_argument, nullptr, 0},
       {"supernode-max-size", required_argument, nullptr, 0},
       {"cpp-max-size-KB", required_argument, nullptr, 0},
       {"sep-mod", required_argument, nullptr, 0},
@@ -194,7 +194,7 @@ int main(int argc, char** argv) {
   // ofs.close();
 
   void emitSchIR(graph * graph, std::ostream & out);
-  std::ofstream out{globalConfig.OutputDir + "/" + g->name + ".sch.sexp"};
+  std::ofstream out{globalConfig.OutputDir};
   emitSchIR(g, out);
   out.close();
 
