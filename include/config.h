@@ -1,6 +1,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#include <string>
+#include <cstdint>
+
 struct Config {
   bool EnableDumpGraph;
   std::string OutputDir;
