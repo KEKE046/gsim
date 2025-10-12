@@ -193,9 +193,9 @@ int main(int argc, char** argv) {
   // exportGraph(g, ofs);
   // ofs.close();
 
-  void emitSchIR(graph * graph, std::ostream & out);
+  void emitSchIRv2(graph * graph, std::ostream & out);
   std::ofstream out{globalConfig.OutputDir};
-  emitSchIR(g, out);
+  emitSchIRv2(g, out);
   out.close();
 
   // FUNC_WRAPPER(g->cppEmitter(), "Final");

@@ -151,5 +151,13 @@ template<typename T>
 inline auto kv(std::string_view s, const T & t) {
     return [=](Emitter & e) { e << inlined << named(s) << kw(".") << t << end << pretty; };
 }
+template<typename T>
+inline auto kvs(std::string_view s, const T & t) {
+    return [=](Emitter & e) {
+        e << inlined << named(s);
+        for(auto & item: t) e << item;
+        e << end << pretty;
+    };
+}
 inline void tup(Emitter & e) { e.tup(); }
 } // namespace sexpr
