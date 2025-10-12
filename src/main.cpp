@@ -188,14 +188,14 @@ int main(int argc, char** argv) {
 
   FUNC_TIMER(g->instsGenerator());
 
-  // void exportGraph(graph* g, std::ostream & out);
-  // std::ofstream ofs{globalConfig.OutputDir + "/" + g->name + ".sexp"};
-  // exportGraph(g, ofs);
-  // ofs.close();
-
   void emitSchIRv2(graph * graph, std::ostream & out);
-  std::ofstream out{globalConfig.OutputDir};
-  emitSchIRv2(g, out);
+  std::ofstream outv2{globalConfig.OutputDir};
+  emitSchIRv2(g, outv2);
+  outv2.close();
+
+  void emitSchIR(graph * graph, std::ostream & out);
+  std::ofstream out{globalConfig.OutputDir + ".v1"};
+  emitSchIR(g, out);
   out.close();
 
   // FUNC_WRAPPER(g->cppEmitter(), "Final");

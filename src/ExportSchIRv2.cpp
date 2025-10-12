@@ -176,12 +176,14 @@ struct SchIREmitterV2 {
           e << kv("cpp-code", inst.inst);
           break;
         case SUPER_INFO_ASSIGN_BEG:
+          if(inst.node->isLocal()) break;
           e << inlined << named("write-pre")
             << kv("name", inst.node->name)
             << kv("sid", node2idx[inst.node])
             << end << pretty;
           break;
         case SUPER_INFO_ASSIGN_END:
+          if(inst.node->isLocal()) break;
           e << inlined << named("write-post")
             << kv("name", inst.node->name)
             << kv("sid", node2idx[inst.node])
@@ -206,15 +208,16 @@ struct SchIREmitterV2 {
     }
     if(super->superType == SUPER_EXTMOD) {
       for(size_t i = 1; i < super->member.size(); i++) {
-        auto node_id = node2idx[super->member[i]];
+        auto node_id = node2idx.at(super->member[i]);
         e << inlined << named("write-pre")
           << kv("name", nodes[node_id].node->name)
           << kv("sid", node_id)
           << end << pretty;
+        assert(!super->member[i]->isLocal());
       }
       emitInsts(super->insts);
       for(size_t i = 1; i < super->member.size(); i++) {
-        auto node_id = node2idx[super->member[i]];
+        auto node_id = node2idx.at(super->member[i]);
         e << inlined << named("write-post")
           << kv("name", nodes[node_id].node->name)
           << kv("sid", node_id)
@@ -235,9 +238,9 @@ struct SchIREmitterV2 {
   void emitReset(const SuperNode * super) {
     int reset_id = 0;
     if(super->resetNode->type == NODE_REG_SRC) {
-      reset_id = nodes[node2idx[super->resetNode]].reset_id;
+      reset_id = nodes[node2idx.at(super->resetNode)].reset_id;
     } else {
-      reset_id = node2idx[super->resetNode];
+      reset_id = node2idx.at(super->resetNode);
     }
     // #define RESET_NAME(node) (node->name + "$RESET")
     // std::string resetName = super->resetNode->type == NODE_REG_SRC 
