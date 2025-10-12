@@ -29,6 +29,8 @@ static std::vector<T> positives(std::vector<T> & vec) {
   }
   return result;
 }
+#define RESET_NAME(node) (node->name + "$RESET")
+
 
 struct SchIREmitterV2 {
   Emitter e;
@@ -147,7 +149,11 @@ struct SchIREmitterV2 {
   void emitNode(const NodeInfo & info) {
     e << inlined << list;
     auto * node = info.node;
-    e << kv("name", node->name);
+    if(info.isReset) {
+      e << kv("name", RESET_NAME(node));
+    } else {
+      e << kv("name", node->name);
+    }
     e << kv("width", node->width);
     if(node->type == NODE_MEMORY) {
       std::vector<int> dims;
