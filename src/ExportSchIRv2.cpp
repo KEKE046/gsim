@@ -129,9 +129,9 @@ struct SchIREmitterV2 {
       }
       for(auto * next: node->next) {
         if(next->super->cppId < 0) continue;
-        if(next->super->cppId > node->super->cppId) {
-          supers[next->super->cppId].reads.insert(node_id);
-        }
+        // if(next->super->cppId > node->super->cppId) {
+        supers[next->super->cppId].reads.insert(node_id);
+        // }
       }
       if(node->type == NODE_REG_DST) {
         auto target = node->getSrc();
