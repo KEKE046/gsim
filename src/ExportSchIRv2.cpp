@@ -102,46 +102,99 @@ struct SchIREmitterV2 {
     for (auto * mem : graph->memory) addNode(mem);
   }
 
-  void populateRWInfo(NodeInfo & info) {
-    auto * node = info.node;
-    auto node_id = node2idx[node];
+  std::set<int> getNodeReaders(Node * node) {
+    std::set<int> readers;
     if(node->type == NODE_MEMORY) {
       for(auto member: node->member) {
-        if(member->type == NODE_READER) {
-          supers[member->super->cppId].reads.insert(node_id);
-        }
-        else if(member->type == NODE_WRITER) {
-          supers[member->super->cppId].writes.insert(node_id);
-        }
-        else if(member->type == NODE_READWRITER) {
-          supers[member->super->cppId].reads.insert(node_id);
-          supers[member->super->cppId].writes.insert(node_id);
+        if(member->type == NODE_READER || member->type == NODE_READWRITER) {
+          readers.insert(member->super->cppId);
         }
       }
-    } else {
-      if(node->type == NODE_INP || node->type == NODE_OUT) {
-        info.isExtIO = true;
-      }
-      if(node->super->cppId < 0) {
-        info.isExtIO = true;
-      } else {
-        supers[node->super->cppId].writes.insert(node_id);
-      }
+    }
+    else {
       for(auto * next: node->next) {
         if(next->super->cppId < 0) continue;
-        if(next->super != node->super) {
-          supers[next->super->cppId].reads.insert(node_id);
-        } else if(node->super->findIndex(node) >= node->super->findIndex(next)) {
-          supers[node->super->cppId].reads.insert(node_id);
+        if(next->super != node->super || node->super->findIndex(node) >= node->super->findIndex(next)) {
+          readers.insert(next->super->cppId);
         }
       }
       if(node->type == NODE_REG_DST) {
         auto target = node->getSrc();
         if(target->super->cppId != -1) {
-          supers[target->super->cppId].reads.insert(node_id);
+          readers.insert(target->super->cppId);
         }
       }
     }
+    return readers;
+  }
+
+  std::set<int> getNodeWriters(Node * node) {
+    std::set<int> writers;
+    if(node->type == NODE_MEMORY) {
+      for(auto member: node->member) {
+        if(member->type == NODE_WRITER || member->type == NODE_READWRITER) {
+          writers.insert(member->super->cppId);
+        }
+      }
+    }
+    else {
+      if(node->super->cppId >= 0) {
+        writers.insert(node->super->cppId);
+      }
+    }
+    return writers;
+  }
+
+  void populateRWInfo(NodeInfo & info) {
+    auto node = info.node;
+    for(auto read: getNodeReaders(node)) {
+      supers[read].reads.insert(node2idx.at(node));
+    }
+    for(auto write: getNodeWriters(node)) {
+      supers[write].writes.insert(node2idx.at(node));
+    }
+    if(node->type == NODE_INP || node->type == NODE_OUT) {
+      info.isExtIO = true;
+    }
+    // auto * node = info.node;
+    // auto node_id = node2idx[node];
+    // if(node->type == NODE_MEMORY) {
+    //   for(auto member: node->member) {
+    //     if(member->type == NODE_READER) {
+    //       supers[member->super->cppId].reads.insert(node_id);
+    //     }
+    //     else if(member->type == NODE_WRITER) {
+    //       supers[member->super->cppId].writes.insert(node_id);
+    //     }
+    //     else if(member->type == NODE_READWRITER) {
+    //       supers[member->super->cppId].reads.insert(node_id);
+    //       supers[member->super->cppId].writes.insert(node_id);
+    //     }
+    //   }
+    // } else {
+    //   if(node->type == NODE_INP || node->type == NODE_OUT) {
+    //     info.isExtIO = true;
+    //   }
+    //   if(node->super->cppId < 0) {
+    //     info.isExtIO = true;
+    //   } else {
+    //     supers[node->super->cppId].writes.insert(node_id);
+    //   }
+    //   for(auto * next: node->next) {
+    //     if(next->super->cppId < 0) continue;
+    //     if(next->super != node->super) {
+    //       supers[next->super->cppId].reads.insert(node_id);
+    //     } else if(node->super->findIndex(node) >= node->super->findIndex(next)) {
+    //       supers[node->super->cppId].reads.insert(node_id);
+    //     }
+    //   }
+    //   if(node->type == NODE_REG_DST) {
+    //     auto target = node->getSrc();
+    //     if(target->super->cppId != -1) {
+    //       supers[target->super->cppId].reads.insert(node_id);
+    //     }
+    //   }
+    // }
   }
 
   void verifySuperRW(SuperInfo & info) {
@@ -174,6 +227,18 @@ struct SchIREmitterV2 {
     e << end << pretty;
   }
 
+  Node * getStateNode(Node * node) {
+    if(node->type == NODE_WRITER) {
+      return node->parent;
+    }
+    else if(node->type == NODE_REG_RESET) {
+      return node->getResetSrc();
+    }
+    else {
+      return node;
+    }
+  }
+
   int getStateId(Node * node) {
     if(node->type == NODE_WRITER) {
       return node2idx.at(node->parent);
@@ -192,6 +257,7 @@ struct SchIREmitterV2 {
       return node2idx.at(node);
     }
   }
+
   void emitInsts(const std::vector<InstInfo>& insts) {
     for(auto inst : insts) {
       switch(inst.infoType) {
@@ -278,20 +344,52 @@ struct SchIREmitterV2 {
     e << list; // reset
     e << kv("reset", reset_id);
     std::set<int> nexts;
+    // for(auto & inst: super->insts) {
+    //   if(inst.infoType == SUPER_INFO_ASSIGN_END) {
+    //     auto node = getStateNode(inst.node);
+    //     auto readers = getNodeReaders(node);
+    //     auto writers = getNodeWriters(node);
+    //     for(auto reader: readers) {
+    //       nexts.insert(reader);
+    //     }
+    //     for(auto writer: writers) {
+    //       nexts.insert(writer);
+    //     }
+    //   }
+    // }
     for(auto * node: super->member) {
       if(node->type == NODE_REG_RESET) {
-        node = node->getResetSrc();
-      }
-      for(auto * next: node->next) {
-        if(next->super->cppId >= 0) {
-          nexts.insert(next->super->cppId);
+        auto src = node->getResetSrc();
+        auto dst = src->getDst();
+        for(auto reader: getNodeReaders(dst)) {
+          nexts.insert(reader);
+        }
+        for(auto writer: getNodeWriters(dst)) {
+          nexts.insert(writer);
+        }
+        for(auto reader: getNodeReaders(src)) {
+          nexts.insert(reader);
+        }
+        for(auto writer: getNodeWriters(src)) {
+          nexts.insert(writer);
+        }
+      } else {
+        for(auto * next: node->next) {
+          if(next->super->cppId >= 0) {
+            nexts.insert(next->super->cppId);
+          }
         }
       }
-      for(auto act: node->nextActiveId) {
-        if(act >= 0) {
-          nexts.insert(act);
-        }
-      }
+      // for(auto * next: node->next) {
+      //   if(next->super->cppId >= 0) {
+      //     nexts.insert(next->super->cppId);
+      //   }
+      // }
+      // for(auto act: node->nextActiveId) {
+      //   if(act >= 0) {
+      //     nexts.insert(act);
+      //   }
+      // }
     }
     e << kvs("acts", nexts);
     e << named("insts");
