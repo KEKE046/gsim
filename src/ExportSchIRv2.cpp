@@ -266,11 +266,11 @@ struct SchIREmitterV2 {
 
   void emitReset(const SuperNode * super) {
     int reset_id = 0;
-    if(super->resetNode->type == NODE_REG_SRC) {
-      reset_id = nodes[node2idx.at(super->resetNode)].reset_id;
-    } else {
-      reset_id = node2idx.at(super->resetNode);
-    }
+    // if(super->resetNode->type == NODE_REG_SRC) {
+    //   reset_id = nodes[node2idx.at(super->resetNode)].reset_id;
+    // } else {
+    reset_id = node2idx.at(super->resetNode);
+    // }
     // #define RESET_NAME(node) (node->name + "$RESET")
     // std::string resetName = super->resetNode->type == NODE_REG_SRC 
     //   ? RESET_NAME(super->resetNode).c_str()
