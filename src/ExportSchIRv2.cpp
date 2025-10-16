@@ -21,8 +21,8 @@ static bool isValidSuper(SuperNode * super) {
 extern int maxConcatNum;
 extern std::string computeExtMod(SuperNode* super);
 
-template<typename T>
-static std::vector<T> positives(std::vector<T> & vec) {
+template<typename V, typename T = std::decay_t<decltype(*std::declval<V>().begin())>>
+static std::vector<T> positives(const V & vec) {
   std::vector<T> result;
   for(auto & item: vec) {
     if(item >= 0) result.push_back(item);
@@ -129,9 +129,11 @@ struct SchIREmitterV2 {
       }
       for(auto * next: node->next) {
         if(next->super->cppId < 0) continue;
-        // if(next->super->cppId > node->super->cppId) {
-        supers[next->super->cppId].reads.insert(node_id);
-        // }
+        if(next->super != node->super) {
+          supers[next->super->cppId].reads.insert(node_id);
+        } else if(node->super->findIndex(node) >= node->super->findIndex(next)) {
+          supers[node->super->cppId].reads.insert(node_id);
+        }
       }
       if(node->type == NODE_REG_DST) {
         auto target = node->getSrc();
@@ -172,6 +174,24 @@ struct SchIREmitterV2 {
     e << end << pretty;
   }
 
+  int getStateId(Node * node) {
+    if(node->type == NODE_WRITER) {
+      return node2idx.at(node->parent);
+    }
+    else if(node->type == NODE_REG_RESET) {
+      node = node->getResetSrc();
+      if(!node2idx.count(node)) {
+        std::cerr << "node not found in state: " << node->name << " " << node->type << " " << node->super->cppId << std::endl;
+      }
+      return node2idx.at(node);
+    }
+    else {
+      if(!node2idx.count(node)) {
+        std::cerr << "node not found in state: " << node->name << " " << node->type << " " << node->super->cppId << std::endl;
+      }
+      return node2idx.at(node);
+    }
+  }
   void emitInsts(const std::vector<InstInfo>& insts) {
     for(auto inst : insts) {
       switch(inst.infoType) {
@@ -185,14 +205,15 @@ struct SchIREmitterV2 {
           if(inst.node->isLocal()) break;
           e << inlined << named("write-pre")
             << kv("name", inst.node->name)
-            << kv("sid", node2idx[inst.node])
+            << kv("sid", getStateId(inst.node))
             << end << pretty;
           break;
         case SUPER_INFO_ASSIGN_END:
           if(inst.node->isLocal()) break;
           e << inlined << named("write-post")
             << kv("name", inst.node->name)
-            << kv("sid", node2idx[inst.node])
+            << kv("sid", getStateId(inst.node))
+            << kvs("acts", positives(inst.node->nextNeedActivate))
             << end << pretty;
           break;
       }
@@ -202,6 +223,7 @@ struct SchIREmitterV2 {
   void emitBlock(const SuperInfo & info) {
     auto super = info.super;
     e << list; // block
+    e << kv("id", super->cppId);
     e << kv("always", super->superType == SUPER_EXTMOD);
     e << kvs("reads", info.reads);
     e << kvs("writes", info.writes);
@@ -227,6 +249,7 @@ struct SchIREmitterV2 {
         e << inlined << named("write-post")
           << kv("name", nodes[node_id].node->name)
           << kv("sid", node_id)
+          << kvs("acts", positives(super->member[i]->nextNeedActivate))
           << end << pretty;
       }
     } else {
@@ -264,10 +287,26 @@ struct SchIREmitterV2 {
           nexts.insert(next->super->cppId);
         }
       }
+      for(auto act: node->nextActiveId) {
+        if(act >= 0) {
+          nexts.insert(act);
+        }
+      }
     }
     e << kvs("acts", nexts);
     e << named("insts");
-    emitInsts(super->insts);
+    // emitInsts(super->insts);
+    for(auto &inst: super->insts) {
+      switch(inst.infoType) {
+        case SUPER_INFO_IF:
+        case SUPER_INFO_ELSE:
+        case SUPER_INFO_DEDENT:
+        case SUPER_INFO_STR:
+          e << kv("cpp-code", inst.inst);
+          break;
+        default: break;
+      }
+    }
     e << end; // insts
     e << end; // reset
   }
