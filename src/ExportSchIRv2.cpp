@@ -3,7 +3,6 @@
 #include "common.h"
 #include "graph.h"
 #include "lexpr.h"
-#include <algorithm>
 #include <cstddef>
 #include <unordered_map>
 
