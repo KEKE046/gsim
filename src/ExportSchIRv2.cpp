@@ -290,6 +290,12 @@ struct SchIREmitterV2 {
     e << list; // block
     e << kv("id", super->cppId);
     e << kv("always", super->superType == SUPER_EXTMOD);
+    e << named("next");
+    for(auto next: super->depNext) {
+      if(next->cppId < 0) continue;
+      e << next->cppId;
+    }
+    e << end << pretty;
     e << kvs("reads", info.reads);
     e << kvs("writes", info.writes);
     e << named("insts");
