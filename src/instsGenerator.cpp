@@ -1707,9 +1707,9 @@ void StmtNode::compute(std::vector<InstInfo>& insts, std::set<InstInfo> assign_i
             else insts.emplace_back(SUPER_INFO_ASSIGN_BEG, belong);
           }
           if (isSubArray(linfo->valStr, node)) {
-            insts.emplace_back(arrayCopy(linfo->valStr, node, rinfo));
+            insts.emplace_back(arrayCopy(linfo->valStr, node, rinfo), belong);
           } else {
-            insts.emplace_back(format("%s = %s;", linfo->valStr.c_str(), rinfo->valStr.c_str()));
+            insts.emplace_back(format("%s = %s;", linfo->valStr.c_str(), rinfo->valStr.c_str()), belong);
           }
           if (belong) {
             if (assign_insts) assign_insts[1].emplace(SUPER_INFO_ASSIGN_END, belong);
@@ -1721,7 +1721,7 @@ void StmtNode::compute(std::vector<InstInfo>& insts, std::set<InstInfo> assign_i
           if (assign_insts) assign_insts[0].emplace(SUPER_INFO_ASSIGN_BEG, belong);
           else insts.emplace_back(SUPER_INFO_ASSIGN_BEG, belong);
         }
-        insts.emplace_back(rinfo->valStr);
+        insts.emplace_back(rinfo->valStr, belong);
         if (belong) {
           if (assign_insts) assign_insts[1].emplace(SUPER_INFO_ASSIGN_END, belong);
           else insts.emplace_back(SUPER_INFO_ASSIGN_END, belong);

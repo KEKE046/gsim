@@ -224,6 +224,7 @@ struct SchIREmitterV2 {
       e << kv("is-ext", true);
     }
     e << end << pretty;
+    e.out << "; " << node2idx.at(node);
   }
 
   Node * getStateNode(Node * node) {
@@ -264,7 +265,18 @@ struct SchIREmitterV2 {
         case SUPER_INFO_ELSE:
         case SUPER_INFO_DEDENT:
         case SUPER_INFO_STR:
-          e << kv("cpp-code", inst.inst);
+          // e << kv("cpp-code", inst.inst);
+          e << inlined << named("cpp-code")
+            << kv("inst", inst.inst);
+          if(inst.node) {
+            auto node = getStateNode(inst.node);
+            if(node2idx.count(node)) {
+              e << named("upd")
+                << node2idx.at(node)
+                << end;
+            }
+          }
+          e << end << pretty;
           break;
         case SUPER_INFO_ASSIGN_BEG:
           if(inst.node->isLocal()) break;
@@ -299,10 +311,23 @@ struct SchIREmitterV2 {
     e << kvs("reads", info.reads);
     e << kvs("writes", info.writes);
     e << named("insts");
-    for(auto read: info.reads) {
-      e << inlined << named("read")
-        << kv("name", nodes[read].node->name)
-        << kv("sid", read)
+    auto access_set = info.reads;
+    access_set.insert(info.writes.begin(), info.writes.end());
+    for(auto sid: access_set) {
+      e << inlined << named("access")
+        << kv("name", nodes[sid].node->name)
+        << kv("sid", sid)
+        << inlined << named("ty");
+      if(info.writes.count(sid) && info.reads.count(sid)) {
+        e << kw("read-write");
+      }
+      else if(info.reads.count(sid)) {
+        e << kw("read-only");
+      }
+      else if(info.writes.count(sid)) {
+        e << kw("write-only");
+      }
+      e << end << pretty
         << end << pretty;
     }
     if(super->superType == SUPER_EXTMOD) {
@@ -326,7 +351,10 @@ struct SchIREmitterV2 {
     } else {
       for(auto * node: super->member) {
         if(node->isLocal()) {
-          e << kv("cpp-code", format("%s %s;", widthUType(node->width).c_str(), node->name.c_str()));
+          e << inlined << named("cpp-code") 
+            << kv("inst", format("%s %s;", widthUType(node->width).c_str(), node->name.c_str()))
+            << end << pretty;
+          // e << kv("cpp-code", format("%s %s;", widthUType(node->width).c_str(), node->name.c_str()));
         }
       }
       emitInsts(super->insts);
@@ -337,31 +365,10 @@ struct SchIREmitterV2 {
 
   void emitReset(const SuperNode * super) {
     int reset_id = 0;
-    // if(super->resetNode->type == NODE_REG_SRC) {
-    //   reset_id = nodes[node2idx.at(super->resetNode)].reset_id;
-    // } else {
     reset_id = node2idx.at(super->resetNode);
-    // }
-    // #define RESET_NAME(node) (node->name + "$RESET")
-    // std::string resetName = super->resetNode->type == NODE_REG_SRC 
-    //   ? RESET_NAME(super->resetNode).c_str()
-    //   : super->resetNode->name.c_str();
     e << list; // reset
     e << kv("reset", reset_id);
     std::set<int> nexts;
-    // for(auto & inst: super->insts) {
-    //   if(inst.infoType == SUPER_INFO_ASSIGN_END) {
-    //     auto node = getStateNode(inst.node);
-    //     auto readers = getNodeReaders(node);
-    //     auto writers = getNodeWriters(node);
-    //     for(auto reader: readers) {
-    //       nexts.insert(reader);
-    //     }
-    //     for(auto writer: writers) {
-    //       nexts.insert(writer);
-    //     }
-    //   }
-    // }
     for(auto * node: super->member) {
       if(node->type == NODE_REG_RESET) {
         auto src = node->getResetSrc();
@@ -385,31 +392,10 @@ struct SchIREmitterV2 {
           }
         }
       }
-      // for(auto * next: node->next) {
-      //   if(next->super->cppId >= 0) {
-      //     nexts.insert(next->super->cppId);
-      //   }
-      // }
-      // for(auto act: node->nextActiveId) {
-      //   if(act >= 0) {
-      //     nexts.insert(act);
-      //   }
-      // }
     }
     e << kvs("acts", nexts);
     e << named("insts");
-    // emitInsts(super->insts);
-    for(auto &inst: super->insts) {
-      switch(inst.infoType) {
-        case SUPER_INFO_IF:
-        case SUPER_INFO_ELSE:
-        case SUPER_INFO_DEDENT:
-        case SUPER_INFO_STR:
-          e << kv("cpp-code", inst.inst);
-          break;
-        default: break;
-      }
-    }
+    emitInsts(super->insts);
     e << end; // insts
     e << end; // reset
   }

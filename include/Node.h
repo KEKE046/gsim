@@ -343,7 +343,7 @@ class InstInfo{
 public:
   SuperInfo infoType = SUPER_INFO_STR;
   std::string inst;
-  Node* node;
+  Node* node = nullptr;
   InstInfo(SuperInfo _type, Node* _node) {
     infoType = _type;
     node = _node;
@@ -351,6 +351,11 @@ public:
   InstInfo(std::string _inst, SuperInfo _type = SUPER_INFO_STR) {
     infoType = _type;
     inst = _inst;
+  }
+  InstInfo(std::string _inst, Node * _node) {
+    infoType = SUPER_INFO_STR;
+    inst = _inst;
+    node = _node;
   }
   InstInfo(SuperInfo _infoType, Node* _node, std::string _inst) {
     node = _node;
