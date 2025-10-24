@@ -420,6 +420,7 @@ struct SchIREmitterV2 {
       }
     }
     e << end; // ext-fns
+    e << named("part");
     e << named("states");
     for(auto & node: nodes) {
       emitNode(node);
@@ -438,6 +439,7 @@ struct SchIREmitterV2 {
       emitReset(super);
     }
     e << end; // reset
+    e << end; // part
     e << end; // design
   }
 };

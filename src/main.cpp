@@ -179,7 +179,7 @@ int main(int argc, char** argv) {
 
   FUNC_WRAPPER(g->graphPartition(), "graphPartition");
 
-  FUNC_WRAPPER(g->replicationOpt(), "Replication");
+  // FUNC_WRAPPER(g->replicationOpt(), "Replication");
 
   // FUNC_WRAPPER(g->mergeRegister(), "MergeRegister");
 
